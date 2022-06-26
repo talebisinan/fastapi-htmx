@@ -1,0 +1,27 @@
+<tr hx-swap="outerHTML" hx-target="this">
+  <td
+    class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+    colspan="2"
+  >
+    <form
+      id="organizationForm"
+      hx-put="/edit/{{ organization.id }}"
+      hx-trigger="submit,focusout"
+    >
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700"
+          >Edit organization name</label
+        >
+        <div class="mt-1">
+          <input
+            name="title"
+            value="{{ organization.title }}"
+            type="text"
+            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+            placeholder="Organization name"
+          />
+        </div>
+      </div>
+    </form>
+  </td>
+</tr>

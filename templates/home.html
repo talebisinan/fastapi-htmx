@@ -1,0 +1,91 @@
+{% extends 'base.html' %} {% block style %}
+<style>
+  li.htmx-swapping {
+    opacity: 0;
+    transition: opacity 1s ease-out;
+  }
+</style>
+{% endblock %} {% block content %}
+
+<div class="px-4 sm:px-6 lg:px-8">
+  <form
+    id="organizationForm"
+    hx-post="/add"
+    hx-swap="beforeend"
+    hx-target="#organizationItems"
+    hx-trigger="submit"
+  >
+    <label for="email" class="block text-sm font-medium text-gray-700"
+      >New organization name</label
+    >
+    <div class="mt-1">
+      <input
+        id="titleInput"
+        autocomplete="off"
+        type="text"
+        name="title"
+        class="max-w-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+        placeholder="Organization name"
+      />
+    </div>
+  </form>
+  <div class="sm:flex sm:items-center mt-12">
+    <div class="sm:flex-auto">
+      <h1 class="text-xl font-semibold text-gray-900">Organizations</h1>
+      <p class="mt-2 text-sm text-gray-700">
+        A list of all the organizations in the company by their title
+      </p>
+    </div>
+    <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+      <!-- <button
+        type="button"
+        class="inline-flex items-center justify-center rounded-md border border-transparent bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 sm:w-auto"
+      >
+        Add organization
+      </button> -->
+    </div>
+  </div>
+
+  <div class="mt-8 flex flex-col">
+    <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+        <div
+          class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg"
+        >
+          <table class="min-w-full divide-y divide-gray-300">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                >
+                  Name
+                </th>
+                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                  <span class="sr-only">Edit</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              class="divide-y divide-gray-200 bg-white"
+              id="organizationItems"
+              hx-swap="outerHTML"
+              hx-target="closest tr"
+            >
+              {% for organization in organizations %} {% include
+              'organizations/item.html' with context %} {% endfor %}
+              <!-- More people... -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block javascript %}
+<script>
+  htmx.on("htmx:afterSwap", function (event) {
+    document.getElementById("titleInput").value = "";
+  });
+</script>
+{% endblock %}

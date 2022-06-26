@@ -1,0 +1,21 @@
+<tr
+  class="hover:cursor-pointer hover:bg-gray-100"
+  hx-swap="outerHTML"
+  hx-get="/edit/{{ organization.id }}"
+>
+  <td
+    class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+  >
+    <p>{{ organization.title }}</p>
+  </td>
+  <td
+    class="w-20 relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"
+  >
+    <button
+      hx-delete="/delete/{{ organization.id }}"
+      class="text-sky-600 hover:text-sky-900"
+    >
+      Delete
+    </button>
+  </td>
+</tr>

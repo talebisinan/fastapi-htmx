@@ -5,8 +5,9 @@ from fastapi import FastAPI, Form
 from fastapi import Request, Response
 from fastapi.responses import HTMLResponse
 
+from tortoise.contrib.fastapi import register_tortoise
+
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
 
 from models.organization import (
     create_organization,
@@ -16,26 +17,24 @@ from models.organization import (
     update_organization,
     delete_organization,
 )
-from database import Base, SessionLocal, engine
 
-Base.metadata.create_all(bind=engine)
 templates = Jinja2Templates(directory="templates")
 
 app = FastAPI()
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+register_tortoise(
+    app,
+    db_url="sqlite://db.sqlite3",
+    modules={"models": ["models.organization"]},
+    generate_schemas=True,
+    add_exception_handlers=True,
+)
 
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request, db: Session = Depends(get_db)):
+async def home(request: Request):
     session_key = request.cookies.get("session_key", uuid.uuid4().hex)
-    organizations = get_organizations(db, session_key)
+    organizations = await get_organizations(session_key)
     context = {
         "request": request,
         "organizations": organizations,
@@ -48,43 +47,36 @@ def home(request: Request, db: Session = Depends(get_db)):
 
 
 @app.post("/add", response_class=HTMLResponse)
-async def post_add(
-    request: Request, title: str = Form(...), db: Session = Depends(get_db)
-):
+async def post_add(request: Request, title: str = Form(...)):
     session_key = request.cookies.get("session_key")
-    organization = create_organization(db, title=title, session_key=session_key)
+    organization = await create_organization(title=title, session_key=session_key)
     context = {"request": request, "organization": organization}
     await ws_manager.broadcast(
-        {"payload": {"count": get_organizations_count(db, session_key)}}
+        {"payload": {"count": await get_organizations_count(session_key)}}
     )
     return templates.TemplateResponse("organizations/item.html", context)
 
 
 @app.get("/edit/{item_id}", response_class=HTMLResponse)
-def get_edit(request: Request, item_id: int, db: Session = Depends(get_db)):
-    organization = get_organization(db, item_id)
+async def get_edit(request: Request, item_id: int):
+    organization = await get_organization(item_id)
     context = {"request": request, "organization": organization}
     return templates.TemplateResponse("organizations/edit.html", context)
 
 
 @app.put("/edit/{item_id}", response_class=HTMLResponse)
-def put_edit(
-    request: Request,
-    item_id: int,
-    title: str = Form(...),
-    db: Session = Depends(get_db),
-):
-    organization = update_organization(db, item_id, title)
+async def put_edit(request: Request, item_id: int, title: str = Form(...)):
+    organization = await update_organization(item_id, title)
     context = {"request": request, "organization": organization}
     return templates.TemplateResponse("organizations/item.html", context)
 
 
 @app.delete("/delete/{item_id}", response_class=Response)
-async def delete(request: Request, item_id: int, db: Session = Depends(get_db)):
+async def delete(request: Request, item_id: int):
     session_key = request.cookies.get("session_key")
-    delete_organization(db, item_id)
+    await delete_organization(item_id)
     await ws_manager.broadcast(
-        {"payload": {"count": get_organizations_count(db, session_key)}}
+        {"payload": {"count": await get_organizations_count(session_key)}}
     )
 
 

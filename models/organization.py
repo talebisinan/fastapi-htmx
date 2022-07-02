@@ -44,8 +44,12 @@ def get_organizations(db: Session, session_key: str, skip: int = 0, limit: int =
     )
 
 
-def get_organizations_count(db: Session) -> int:
-    return db.query(func.count(Organization.id)).scalar()
+def get_organizations_count(db: Session, session_key: str) -> int:
+    return (
+        db.query(func.count(Organization.id))
+        .filter(Organization.session_key == session_key)
+        .scalar()
+    )
 
 
 def delete_organization(db: Session, item_id: int):

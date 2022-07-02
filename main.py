@@ -54,7 +54,9 @@ async def post_add(
     session_key = request.cookies.get("session_key")
     organization = create_organization(db, title=title, session_key=session_key)
     context = {"request": request, "organization": organization}
-    await ws_manager.broadcast({"payload": {"count": get_organizations_count(db)}})
+    await ws_manager.broadcast(
+        {"payload": {"count": get_organizations_count(db, session_key)}}
+    )
     return templates.TemplateResponse("organizations/item.html", context)
 
 
@@ -78,9 +80,12 @@ def put_edit(
 
 
 @app.delete("/delete/{item_id}", response_class=Response)
-async def delete(item_id: int, db: Session = Depends(get_db)):
+async def delete(request: Request, item_id: int, db: Session = Depends(get_db)):
+    session_key = request.cookies.get("session_key")
     delete_organization(db, item_id)
-    await ws_manager.broadcast({"payload": {"count": get_organizations_count(db)}})
+    await ws_manager.broadcast(
+        {"payload": {"count": get_organizations_count(db, session_key)}}
+    )
 
 
 class ConnectionManager:

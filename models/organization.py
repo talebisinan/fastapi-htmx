@@ -1,58 +1,42 @@
-from sqlalchemy import Column, func
-from sqlalchemy import Integer
-from sqlalchemy import String
-from sqlalchemy.orm import Session
-
-from database import Base
+from tortoise.models import Model
+from tortoise import fields
 
 
-class Organization(Base):
-    __tablename__ = "organizations"
+class Organization(Model):
+    id = fields.IntField(pk=True)
+    title = fields.TextField()
+    session_key = fields.TextField()
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String)
-    session_key = Column(String)
+    def __str__(self):
+        return "organizations"
 
 
-def create_organization(db: Session, title: str, session_key: str):
-    organization = Organization(title=title, session_key=session_key)
-    db.add(organization)
-    db.commit()
-    db.refresh(organization)
+async def create_organization(title: str, session_key: str):
+    organization = await Organization.create(title=title, session_key=session_key)
     return organization
 
 
-def get_organization(db: Session, item_id: int):
-    return db.query(Organization).filter(Organization.id == item_id).first()
+async def get_organization(item_id: int):
+    return await Organization.get(id=item_id)
 
 
-def update_organization(db: Session, item_id: int, title: str):
-    organization = get_organization(db, item_id)
+async def update_organization(item_id: int, title: str):
+    organization = await get_organization(item_id)
     organization.title = title
-    db.commit()
-    db.refresh(organization)
+    await organization.save()
     return organization
 
 
-def get_organizations(db: Session, session_key: str, skip: int = 0, limit: int = 100):
-    return (
-        db.query(Organization)
-        .filter(Organization.session_key == session_key)
-        .offset(skip)
-        .limit(limit)
-        .all()
+async def get_organizations(session_key: str, skip: int = 0, limit: int = 100):
+    return await (
+        Organization.filter(session_key=session_key).offset(skip).limit(limit).all()
     )
 
 
-def get_organizations_count(db: Session, session_key: str) -> int:
-    return (
-        db.query(func.count(Organization.id))
-        .filter(Organization.session_key == session_key)
-        .scalar()
-    )
+async def get_organizations_count(session_key: str) -> int:
+    return await Organization.filter(session_key=session_key).count()
 
 
-def delete_organization(db: Session, item_id: int):
-    organization = get_organization(db, item_id)
-    db.delete(organization)
-    db.commit()
+async def delete_organization(item_id: int):
+    organization = await get_organization(item_id)
+    await organization.delete()

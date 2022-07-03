@@ -32,60 +32,37 @@ def get_db():
         db.close()
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def home(request: Request, db: Session = Depends(get_db)):
     session_key = request.cookies.get("session_key", uuid.uuid4().hex)
-    organizations = get_organizations(db, session_key)
-    context = {
-        "request": request,
-        "organizations": organizations,
-        "title": "Home",
-        "orgs_count": len(organizations),
-    }
-    response = templates.TemplateResponse("home.html", context)
-    response.set_cookie(key="session_key", value=session_key, expires=259200)  # 3 days
-    return response
+    return get_organizations(db, session_key)
 
-
-@app.post("/add", response_class=HTMLResponse)
+@app.post("/add")
 async def post_add(
     request: Request, title: str = Form(...), db: Session = Depends(get_db)
 ):
     session_key = request.cookies.get("session_key")
-    organization = create_organization(db, title=title, session_key=session_key)
-    context = {"request": request, "organization": organization}
-    await ws_manager.broadcast(
-        {"payload": {"count": get_organizations_count(db, session_key)}}
-    )
-    return templates.TemplateResponse("organizations/item.html", context)
+    return create_organization(db, title=title, session_key=session_key)
 
-
-@app.get("/edit/{item_id}", response_class=HTMLResponse)
+@app.get("/edit/{item_id}")
 def get_edit(request: Request, item_id: int, db: Session = Depends(get_db)):
-    organization = get_organization(db, item_id)
-    context = {"request": request, "organization": organization}
-    return templates.TemplateResponse("organizations/edit.html", context)
+   return get_organization(db, item_id)
 
 
-@app.put("/edit/{item_id}", response_class=HTMLResponse)
+@app.put("/edit/{item_id}")
 def put_edit(
     request: Request,
     item_id: int,
     title: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    organization = update_organization(db, item_id, title)
-    context = {"request": request, "organization": organization}
-    return templates.TemplateResponse("organizations/item.html", context)
+    return update_organization(db, item_id, title)
 
 
-@app.delete("/delete/{item_id}", response_class=Response)
+@app.delete("/delete/{item_id}")
 async def delete(request: Request, item_id: int, db: Session = Depends(get_db)):
     session_key = request.cookies.get("session_key")
-    delete_organization(db, item_id)
-    await ws_manager.broadcast(
-        {"payload": {"count": get_organizations_count(db, session_key)}}
-    )
+    return delete_organization(db, item_id)
 
 
 class ConnectionManager:

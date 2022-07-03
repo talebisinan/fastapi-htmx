@@ -1,0 +1,13 @@
+<div>
+    <script defer>
+        var ws = new WebSocket("ws://127.0.0.1:8000/count");
+        ws.onmessage = function(event) {
+            var data = JSON.parse(event.data)
+            var counter = document.getElementById('orgs.counter')
+            counter.innerText = data.payload["count"]
+        };
+    </script>
+    Count of orgs: <span id="orgs.counter">{{orgs_count}}</span>
+</div>
+
+

@@ -1,4 +1,4 @@
-from sqlalchemy import Column
+from sqlalchemy import Column, func
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.orm import Session
@@ -42,6 +42,10 @@ def get_organizations(db: Session, session_key: str, skip: int = 0, limit: int =
         .limit(limit)
         .all()
     )
+
+
+def get_organizations_count(db: Session) -> int:
+    return db.query(func.count(Organization.id)).scalar()
 
 
 def delete_organization(db: Session, item_id: int):
